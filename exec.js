@@ -322,11 +322,15 @@
                 for (var j = 0; j < files.length; j++) {
                     if (files[j].indexOf('webr_plot_') !== 0 || files[j].slice(-4) !== '.png') continue;
                     var bytes = new Uint8Array(await w.FS.readFile(R_TMP + '/' + files[j])), bin = '';
+                    if (!bytes.byteLength) { out(id, 'stderr', '[R plot not read: ' + files[j] + ' is empty]\n'); await w.FS.unlink(R_TMP + '/' + files[j]); continue; }
                     for (var k = 0; k < bytes.byteLength; k++) bin += String.fromCharCode(bytes[k]);
                     plots.push(btoa(bin));
                     await w.FS.unlink(R_TMP + '/' + files[j]);
                 }
-            } catch (e) { /* no plots */ }
+            } catch (e) {
+                // Say so in the cell. A silent catch here made a failing plot look like "Completed with no output", with no console on a phone to tell why.
+                out(id, 'stderr', '[R plot not read: ' + (e && e.message ? e.message : String(e)) + ']\n');
+            }
         }
         return { value: null, plots: plots, error: null };
     }
