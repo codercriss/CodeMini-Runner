@@ -305,7 +305,9 @@
         await w.evalRVoid('png(file="' + R_TMP + '/webr_plot_%03d.png", width=800, height=600, res=100)');
         var plots = [];
         try {
-            var capOpts = { withAutoprint: true, captureStreams: true, captureConditions: false };
+            // captureGraphics: false on purpose. webR's default opens its own canvas device and sends the plot there as an ImageBitmap; the png device
+            // above would stay empty ("Completed with no output"), and on iOS that canvas path has reloaded the page.
+            var capOpts = { withAutoprint: true, captureStreams: true, captureConditions: false, captureGraphics: false };
             if (env) capOpts.env = env;
             var cap = await shelter.captureR(code, capOpts);
             cap.output.forEach(function (o) {
