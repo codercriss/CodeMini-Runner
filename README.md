@@ -4,8 +4,8 @@ A tiny static site that runs CodeMini's previews on a **different origin** from 
 read the app's storage (My Keys vault, GitHub token record, device key) or call its functions. It has no build step,
 no server code and no secrets: `shell.html` and `shell.js` (previews), `exec.html` and `exec.js` (the Console and Terminal's code-execution host), `config.js`, `index.html` and `vercel.json`. **Redeploy the runner after pulling this version**; without `exec.html` the Console and Terminal simply fall back to running inside the app.
 
-- App: `https://the-code-mini-ide.vercel.app`
-- Runner: `https://the-code-mini-runner.vercel.app`
+- App: `https://codemini-ide.vercel.app`
+- Runner: `https://codemini-runner.vercel.app`
 
 ## Deploy (Vercel CLI)
 
@@ -13,20 +13,20 @@ Run these **from inside this `runner/` folder**, not the repo root:
 
 ```
 cd runner
-vercel            # first time: answer the prompts, name the project  the-code-mini-runner
+vercel            # first time: answer the prompts, name the project  codemini-runner
 vercel --prod
 ```
 
 - Framework preset: **Other**. No build command, no output directory (the folder itself is served).
-- The project name decides the address. If `the-code-mini-runner` is taken and Vercel gives you another one, change
+- The project name decides the address. If `codemini-runner` is taken and Vercel gives you another one, change
   `DEFAULT_URL` in `js/viewers/runner-client.js` to match.
-- If the app's address is not `the-code-mini-ide.vercel.app`, change it in **both** `config.js` (`allowedParents`) and
+- If the app's address is not `codemini-ide.vercel.app`, change it in **both** `config.js` (`allowedParents`) and
   `vercel.json` (`frame-ancestors`). The browser enforces the header; the list is a second check inside the page. Keep `'self'` in the header: the previewed page is framed by the runner's own shell, and some browsers (WebKit) apply the policy to that inner page too.
 - Deploy the app from the repo root as before. `.vercelignore` keeps `runner/` out of the app deployment.
 
 ## Check it works
 
-1. Open `https://the-code-mini-runner.vercel.app/` in a private window. You should see a short sentence, not a Vercel
+1. Open `https://codemini-runner.vercel.app/` in a private window. You should see a short sentence, not a Vercel
    login page. (If you see a login page, switch off Deployment Protection for the production domain in the project's
    settings; the runner holds nothing private.)
 2. In CodeMini, preview an HTML file. The toolbar shows a green shield; hovering says **Isolated**. An amber warning

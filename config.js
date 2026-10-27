@@ -2,7 +2,7 @@
 // value in vercel.json (the browser enforces that one; this list is the second, in-page check).
 (function () {
     'use strict';
-    var parents = ['https://the-code-mini-ide.vercel.app'];
+    var parents = ['https://codemini-ide.vercel.app'];
     // Development: a runner served from localhost may also be driven by a CodeMini served from localhost.
     // The deployed runner (a vercel.app host) never includes these.
     if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
