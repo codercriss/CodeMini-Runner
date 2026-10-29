@@ -13,7 +13,7 @@
 //                                                   opts: trusted, autoInstall, raw (return the result text, no capture), sep
 //                 prompt-reply{pid, value}         the answer to an exec-prompt
 //                 reset{id, lang}                  forget a language's state (python: a fresh namespace; sql: a fresh database; r: a fresh environment)
-//   host -> app   ready / hello-ack
+//   host -> app   ready / hello-ack{version, build}   (the runner's level and build date, see config.js)
 //                 exec-out{id, kind, text}         output as it happens: stdout stderr log info warn error html
 //                 exec-prompt{id, pid, text}       Python's ainput(): the app asks the person and replies
 //                 exec-done{id, value, plots, error, ms}
@@ -286,6 +286,15 @@
         webRLoading.catch(function () { webRLoading = null; });
         return webRLoading;
     }
+    // webR's FS has no readdir ("w.FS.readdir is not a function", seen on a phone 2026-10-27), so list files by asking R. `regex` is an R regular
+    // expression written without backslashes.
+    async function rListFiles(w, dir, regex) {
+        var code = 'list.files("' + dir + '", pattern = "' + regex + '")';
+        if (typeof w.evalRRaw === 'function') return (await w.evalRRaw(code, 'string[]')) || [];
+        var o = await w.evalR(code);
+        try { return ((await o.toArray()) || []).filter(function (x) { return typeof x === 'string'; }); }
+        finally { try { await w.destroy(o); } catch (e) { /* nothing to free */ } }
+    }
     async function runR(id, code, opts) {
         var w = await getWebR();
         if (Array.isArray(opts.install)) {            // the package manager
@@ -301,7 +310,7 @@
         }
         var shelter = await new w.Shelter();
         try { await w.FS.mkdir(R_TMP); } catch (e) { /* exists */ }
-        try { var old = await w.FS.readdir(R_TMP); for (var i = 0; i < old.length; i++) if (old[i].indexOf('webr_plot_') === 0) await w.FS.unlink(R_TMP + '/' + old[i]); } catch (e) { /* nothing to clear */ }
+        try { var old = await rListFiles(w, R_TMP, '^webr_plot_'); for (var i = 0; i < old.length; i++) await w.FS.unlink(R_TMP + '/' + old[i]); } catch (e) { /* nothing to clear */ }
         await w.evalRVoid('png(file="' + R_TMP + '/webr_plot_%03d.png", width=800, height=600, res=100)');
         var plots = [];
         try {
@@ -318,7 +327,7 @@
             shelter.purge();
             await w.evalRVoid('tryCatch(dev.off(), error=function(e) NULL)');
             try {
-                var files = await w.FS.readdir(R_TMP);
+                var files = await rListFiles(w, R_TMP, '^webr_plot_.*[.]png$');
                 for (var j = 0; j < files.length; j++) {
                     if (files[j].indexOf('webr_plot_') !== 0 || files[j].slice(-4) !== '.png') continue;
                     var bytes = new Uint8Array(await w.FS.readFile(R_TMP + '/' + files[j])), bin = '';
@@ -357,7 +366,7 @@
             if (hostOrigin) return;
             if (typeof d.nonce !== 'string' || d.nonce.length < 16 || d.nonce.length > 128) return;
             hostOrigin = e.origin; nonce = d.nonce;
-            send({ cmRunner: 1, op: 'hello-ack' });
+            send({ cmRunner: 1, op: 'hello-ack', version: (CFG.version | 0), build: String(CFG.build || '') });   // see config.js: lets the app tell an out-of-date runner
             return;
         }
         if (!hostOrigin) return;
